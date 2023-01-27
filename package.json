@@ -1,7 +1,7 @@
 {
   "name": "ton-crypto",
   "version": "3.2.0",
-  "repository": "https://github.com/ex3ndr/ton-crypto.git",
+  "repository": "https://github.com/ton-core/ton-crypto.git",
   "author": "Steve Korshakov <steve@korshakov.com>",
   "license": "MIT",
   "main": "dist/index.js",
