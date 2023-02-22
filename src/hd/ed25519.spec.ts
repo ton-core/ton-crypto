@@ -1,3 +1,11 @@
+/**
+ * Copyright (c) Whales Corp. 
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import { keyPairFromSeed } from "../primitives/nacl";
 import { deriveED25519HardenedKey, getED25519MasterKeyFromSeed, deriveEd25519Path } from "./ed25519";
 
