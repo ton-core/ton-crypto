@@ -75,12 +75,41 @@ describe('mnemonic', () => {
         expect((await mnemonicNew()).length).toBe(24);
     });
     it('should validate mnemonics', async () => {
-        expect(await mnemonicValidate(['a'])).toBe(false);
         expect(await mnemonicValidate([
             'hospital', 'stove', 'relief', 'fringe', 'tongue', 'always', 'charge', 'angry', 'urge',
             'sentence', 'again', 'match', 'nerve', 'inquiry', 'senior', 'coconut', 'label', 'tumble',
             'carry', 'category', 'beauty', 'bean', 'road', 'solution'])
         ).toBe(true);
+
+        expect(await mnemonicValidate(['a'])).toBe(false);
+
+        // 23 words
+        expect(await mnemonicValidate([
+            'hospital', 'stove', 'relief', 'fringe', 'tongue', 'always', 'charge', 'angry', 'urge',
+            'sentence', 'again', 'match', 'nerve', 'inquiry', 'senior', 'coconut', 'label', 'tumble',
+            'carry', 'category', 'beauty', 'bean', 'road'])
+        ).toBe(false);
+
+        // 25 words
+        expect(await mnemonicValidate([
+            'hospital', 'stove', 'relief', 'fringe', 'tongue', 'always', 'charge', 'angry', 'urge',
+            'sentence', 'again', 'match', 'nerve', 'inquiry', 'senior', 'coconut', 'label', 'tumble',
+            'carry', 'category', 'beauty', 'bean', 'road', 'solution', 'road'])
+        ).toBe(false);
+
+        // typo in word
+        expect(await mnemonicValidate([
+            'haspital', 'stove', 'relief', 'fringe', 'tongue', 'always', 'charge', 'angry', 'urge',
+            'sentence', 'again', 'match', 'nerve', 'inquiry', 'senior', 'coconut', 'label', 'tumble',
+            'carry', 'category', 'beauty', 'bean', 'road', 'solution'])
+        ).toBe(false);
+
+        // invalid checksum
+        expect(await mnemonicValidate([
+            'hospital', 'hospital', 'relief', 'fringe', 'tongue', 'always', 'charge', 'angry', 'urge',
+            'sentence', 'again', 'match', 'nerve', 'inquiry', 'senior', 'coconut', 'label', 'tumble',
+            'carry', 'category', 'beauty', 'bean', 'road', 'solution'])
+        ).toBe(false);
     });
 
     for (let i = 0; i < testVectors.length; i++) {
