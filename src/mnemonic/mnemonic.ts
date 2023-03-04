@@ -31,6 +31,7 @@ function validateMnemonicWords(mnemonicArray: string[]) {
             return false;
         }
     }
+    return true;
 }
 
 async function isBasicSeed(entropy: Buffer | string) {
