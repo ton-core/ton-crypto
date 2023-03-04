@@ -25,15 +25,6 @@ function normalizeMnemonic(src: string[]) {
     return src.map((v) => v.toLowerCase().trim());
 }
 
-function validateMnemonicWords(mnemonicArray: string[]) {
-    for (let word of mnemonicArray) {
-        if (wordlist.indexOf(word) < 0) {
-            return false;
-        }
-    }
-    return true;
-}
-
 async function isBasicSeed(entropy: Buffer | string) {
     // https://github.com/ton-blockchain/ton/blob/24dc184a2ea67f9c47042b4104bbb4d82289fac1/tonlib/tonlib/keys/Mnemonic.cpp#L68
     // bool Mnemonic::is_basic_seed() {
@@ -108,7 +99,7 @@ export async function mnemonicToPrivateKey_unsafe(mnemonicArray: string[], passw
 export async function mnemonicToPrivateKey(mnemonicArray: string[], password?: string | null | undefined): Promise<KeyPair> {
     mnemonicArray = normalizeMnemonic(mnemonicArray);
 
-    if (validateMnemonicWords(mnemonicArray) === false) {
+    if (!await mnemonicValidate(mnemonicArray)) {
         throw new Error('Invalid mnemonic');
     }
 
@@ -171,8 +162,10 @@ export async function mnemonicValidate(mnemonicArray: string[], password?: strin
     mnemonicArray = normalizeMnemonic(mnemonicArray);
 
     // Validate mnemonic words
-    if (validateMnemonicWords(mnemonicArray) == false) {
-        return false;
+    for (let word of mnemonicArray) {
+        if (wordlist.indexOf(word) < 0) {
+            return false;
+        }
     }
 
     // Check password
