@@ -25,6 +25,14 @@ function normalizeMnemonic(src: string[]) {
     return src.map((v) => v.toLowerCase().trim());
 }
 
+function validateMnemonicWords(mnemonicArray: string[]) {
+    for (let word of mnemonicArray) {
+        if (wordlist.indexOf(word) < 0) {
+            return false;
+        }
+    }
+}
+
 async function isBasicSeed(entropy: Buffer | string) {
     // https://github.com/ton-blockchain/ton/blob/24dc184a2ea67f9c47042b4104bbb4d82289fac1/tonlib/tonlib/keys/Mnemonic.cpp#L68
     // bool Mnemonic::is_basic_seed() {
@@ -70,12 +78,12 @@ export async function mnemonicToSeed(mnemonicArray: string[], seed: string, pass
 }
 
 /**
- * Extract private key from mnemonic
+ * Extract private key from mnemonic (do not check if mnemonic is valid)
  * @param mnemonicArray mnemonic array
  * @param password mnemonic password
  * @returns Key Pair
  */
-export async function mnemonicToPrivateKey(mnemonicArray: string[], password?: string | null | undefined): Promise<KeyPair> {
+export async function mnemonicToPrivateKey_unsafe(mnemonicArray: string[], password?: string | null | undefined): Promise<KeyPair> {
     // https://github.com/ton-blockchain/ton/blob/24dc184a2ea67f9c47042b4104bbb4d82289fac1/tonlib/tonlib/keys/Mnemonic.cpp#L64
     // td::Ed25519::PrivateKey Mnemonic::to_private_key() const {
     //   return td::Ed25519::PrivateKey(td::SecureString(as_slice(to_seed()).substr(0, td::Ed25519::PrivateKey::LENGTH)));
@@ -90,9 +98,43 @@ export async function mnemonicToPrivateKey(mnemonicArray: string[], password?: s
 }
 
 /**
+ * Extract private key from mnemonic
+ * @param mnemonicArray mnemonic array
+ * @param password mnemonic password
+ * @throws Error if mnemonic is invalid
+ * @returns Key Pair
+ */
+export async function mnemonicToPrivateKey(mnemonicArray: string[], password?: string | null | undefined): Promise<KeyPair> {
+    mnemonicArray = normalizeMnemonic(mnemonicArray);
+
+    if (validateMnemonicWords(mnemonicArray) === false) {
+        throw new Error('Invalid mnemonic');
+    }
+
+    return mnemonicToPrivateKey_unsafe(mnemonicArray, password);
+}
+
+/**
+ * Convert mnemonic to wallet key pair (do not check if mnemonic is valid)
+ * @param mnemonicArray mnemonic array
+ * @param password mnemonic password
+ * @returns Key Pair
+ */
+export async function mnemonicToWalletKey_unsafe(mnemonicArray: string[], password?: string | null | undefined): Promise<KeyPair> {
+    let seedPk = await mnemonicToPrivateKey_unsafe(mnemonicArray, password);
+    let seedSecret = seedPk.secretKey.slice(0, 32);
+    const keyPair = nacl.sign.keyPair.fromSeed(seedSecret);
+    return {
+        publicKey: Buffer.from(keyPair.publicKey),
+        secretKey: Buffer.from(keyPair.secretKey)
+    };
+}
+
+/**
  * Convert mnemonic to wallet key pair
  * @param mnemonicArray mnemonic array
  * @param password mnemonic password
+ * @throws Error if mnemonic is invalid
  * @returns Key Pair
  */
 export async function mnemonicToWalletKey(mnemonicArray: string[], password?: string | null | undefined): Promise<KeyPair> {
@@ -128,10 +170,8 @@ export async function mnemonicValidate(mnemonicArray: string[], password?: strin
     mnemonicArray = normalizeMnemonic(mnemonicArray);
 
     // Validate mnemonic words
-    for (let word of mnemonicArray) {
-        if (wordlist.indexOf(word) < 0) {
-            return false;
-        }
+    if (validateMnemonicWords(mnemonicArray) == false) {
+        return false;
     }
 
     // Check password

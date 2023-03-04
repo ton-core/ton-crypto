@@ -91,6 +91,16 @@ describe('mnemonic', () => {
             expect(wk.secretKey.toString('hex')).toEqual(testVectors[i].key);
         });
     }
+
+    it('should fail if mnemonic is invalid', async () => {
+        // Typo in the first word: hospital -> haspital
+        expect(mnemonicToWalletKey([
+            'haspital', 'stove', 'relief', 'fringe', 'tongue', 'always', 'charge', 'angry', 'urge',
+            'sentence', 'again', 'match', 'nerve', 'inquiry', 'senior', 'coconut', 'label', 'tumble',
+            'carry', 'category', 'beauty', 'bean', 'road', 'solution'])
+        ).rejects.toThrowError('Invalid mnemonic');
+    });
+
     it('should generate same keys for mnemonicToPrivateKey and mnemonicToWalletKey', async () => {
         for (let i = 0; i < 10; i++) {
             let k = await mnemonicNew();
